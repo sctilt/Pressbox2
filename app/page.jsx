@@ -13,39 +13,31 @@ const G = {
 export default function ThePressBox() {
   const [tab, setTab] = useState<'front' | 'watch' | 'wax' | 'oz'>('front');
   const [liveGames, setLiveGames] = useState<any[]>([]);
-  const [headlines, setHeadlines] = useState<any[]>([]);
-  const [loadingScores, setLoadingScores] = useState(false);
-  const [loadingNews, setLoadingNews] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch live MLB scores
+  const today = new Date().toISOString().split('T')[0];
+
   const fetchLiveScores = async () => {
-    setLoadingScores(true);
+    setLoading(true);
+    setError(null);
     try {
-      const today = new Date().toISOString().split('T')[0];
       const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
+      if (!res.ok) throw new Error('Failed to fetch scores');
       const data = await res.json();
       const games = data.dates?.[0]?.games || [];
       setLiveGames(games);
-    } catch (e) {
-      console.error(e);
+    } catch (err: any) {
+      console.error(err);
+      setError('Could not load live scores');
       setLiveGames([]);
     }
-    setLoadingScores(false);
-  };
-
-  // Simple news fallback (you can replace with real news API later)
-  const fetchHeadlines = async () => {
-    setLoadingNews(true);
-    setHeadlines([
-      { headline: "Live sports data loading...", summary: "MLB, NBA, and card market updates in real time" },
-    ]);
-    setLoadingNews(false);
+    setLoading(false);
   };
 
   useEffect(() => {
     if (tab === 'front') {
       fetchLiveScores();
-      fetchHeadlines();
     }
   }, [tab]);
 
@@ -57,7 +49,9 @@ export default function ThePressBox() {
         <h1 style={{ fontSize: '42px', fontWeight: '900', margin: '8px 0', color: 'white', letterSpacing: '3px' }}>
           THE PRESS BOX
         </h1>
-        <div style={{ color: G.gold, fontSize: '16px' }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+        <div style={{ color: G.gold, fontSize: '16px' }}>
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+        </div>
       </div>
 
       {/* Navigation */}
@@ -88,50 +82,56 @@ export default function ThePressBox() {
       </div>
 
       <div style={{ padding: '20px', maxWidth: '720px', margin: '0 auto' }}>
+        {/* FRONT PAGE - LIVE SCORES */}
         {tab === 'front' && (
           <>
             <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px', marginBottom: '20px' }}>
               <h2 style={{ color: G.gold }}>🔴 Live MLB Scores</h2>
-              {loadingScores && <p>Loading live games...</p>}
+              {loading && <p>Loading live games...</p>}
+              {error && <p style={{ color: G.down }}>{error}</p>}
+              
               {liveGames.length > 0 ? (
-                liveGames.map((g, i) => (
+                liveGames.map((game, i) => (
                   <div key={i} style={{ padding: '12px 0', borderBottom: `1px solid ${G.border}` }}>
-                    {g.teams?.away?.team?.name} @ {g.teams?.home?.team?.name} — {g.status?.detailedState || 'Scheduled'}
+                    <strong>
+                      {game.teams?.away?.team?.name} @ {game.teams?.home?.team?.name}
+                    </strong>
+                    <div style={{ color: G.muted, fontSize: '14px', marginTop: '4px' }}>
+                      {game.status?.detailedState || 'Scheduled'}
+                    </div>
                   </div>
                 ))
-              ) : <p>No games today or API issue.</p>}
+              ) : !loading && <p>No games today or API unavailable.</p>}
             </div>
 
             <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px' }}>
               <h2 style={{ color: G.gold }}>📰 Top Headlines</h2>
-              {headlines.map((h, i) => (
-                <div key={i} style={{ marginBottom: '15px' }}>
-                  <strong>{h.headline}</strong>
-                  <p style={{ color: G.muted, marginTop: '5px' }}>{h.summary}</p>
-                </div>
-              ))}
+              <p style={{ color: G.muted }}>Live news &amp; card market updates will load here (next update).</p>
             </div>
           </>
         )}
 
+        {/* MY PLAYERS */}
         {tab === 'watch' && (
           <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
             <h2 style={{ color: G.gold }}>👀 My Players</h2>
-            <p>Dynamic player tracking with live card values coming soon (via external APIs).</p>
+            <p style={{ color: G.muted }}>Real-time player stats and card values coming in next update.</p>
           </div>
         )}
 
+        {/* WAX */}
         {tab === 'wax' && (
           <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
             <h2 style={{ color: G.gold }}>📦 Live Wax Market</h2>
-            <p>Real-time release tracking and secondary market data coming in next update.</p>
+            <p style={{ color: G.muted }}>Real-time release dates and secondary market prices coming soon.</p>
           </div>
         )}
 
+        {/* OZ */}
         {tab === 'oz' && (
           <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
             <h2 style={{ color: G.gold }}>🔮 Oz Live Predictions</h2>
-            <p>AI-powered picks and betting edges will pull fresh data here.</p>
+            <p style={{ color: G.muted }}>AI-powered betting edges and investment picks loading live...</p>
           </div>
         )}
       </div>
