@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 const G = {
   bg: "#001a0d", bg2: "#002814", bg3: "#003318",
   border: "#004d24", border2: "#006a3d",
-  green: "#006a3d", gold: "#ffd100",
+  green: "#006a3d", gold: "#ffd100", white: "#ffffff",
   text: "#e8f5ee", muted: "#7ab893", dim: "#1a4030",
   up: "#00e676", down: "#ff4444",
 };
@@ -14,36 +14,30 @@ export default function ThePressBox() {
   const [tab, setTab] = useState('front');
   const [liveGames, setLiveGames] = useState([]);
   const [headlines, setHeadlines] = useState([]);
-  const [loadingScores, setLoadingScores] = useState(false);
-  const [loadingHeadlines, setLoadingHeadlines] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
   const fetchLiveScores = async () => {
-    setLoadingScores(true);
+    setLoading(true);
     try {
       const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
       const data = await res.json();
-      const games = data.dates?.[0]?.games || [];
-      setLiveGames(games);
+      setLiveGames(data.dates?.[0]?.games || []);
     } catch (e) {
       console.error(e);
-      setLiveGames([]);
     }
-    setLoadingScores(false);
+    setLoading(false);
   };
 
   const fetchHeadlines = async () => {
-    setLoadingHeadlines(true);
     try {
       const res = await fetch('/api/headlines');
       const data = await res.json();
       setHeadlines(data.headlines || []);
     } catch (e) {
-      console.error(e);
-      setHeadlines([{ headline: "Live news loading...", summary: "Claude is generating fresh headlines" }]);
+      setHeadlines([{ headline: "Welcome to The Press Box", summary: "Real-time sports cards & scores" }]);
     }
-    setLoadingHeadlines(false);
   };
 
   useEffect(() => {
@@ -55,37 +49,38 @@ export default function ThePressBox() {
 
   return (
     <div style={{ minHeight: '100vh', background: G.bg, color: G.text, fontFamily: 'Arial, sans-serif' }}>
-      {/* Masthead */}
-      <div style={{ background: G.green, padding: '20px 10px', textAlign: 'center', borderBottom: `4px solid ${G.gold}` }}>
-        <div style={{ color: G.gold, fontSize: '12px', letterSpacing: '6px' }}>⬥ REAL-TIME SPORTS EDITION ⬥</div>
-        <h1 style={{ fontSize: '42px', fontWeight: '900', margin: '8px 0', color: 'white', letterSpacing: '3px' }}>
+      {/* Rich Masthead */}
+      <div style={{ background: G.green, padding: '25px 15px', textAlign: 'center', borderBottom: `5px solid ${G.gold}` }}>
+        <div style={{ color: G.gold, fontSize: '13px', letterSpacing: '8px', marginBottom: '8px' }}>⬥ FENWAY EDITION ⬥</div>
+        <h1 style={{ fontSize: '48px', fontWeight: '900', margin: '0', color: 'white', letterSpacing: '4px' }}>
           THE PRESS BOX
         </h1>
-        <div style={{ color: G.gold, fontSize: '16px' }}>
+        <div style={{ color: G.gold, fontSize: '18px', marginTop: '8px' }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </div>
       </div>
 
       {/* Navigation */}
-      <div style={{ display: 'flex', background: G.bg2, overflowX: 'auto', borderBottom: `2px solid ${G.green}` }}>
+      <div style={{ display: 'flex', background: G.bg2, overflowX: 'auto', borderBottom: `3px solid ${G.green}` }}>
         {[
-          { id: 'front', label: '🏠 FRONT PAGE' },
-          { id: 'watch', label: '👀 MY PLAYERS' },
-          { id: 'wax', label: '📦 WAX' },
-          { id: 'oz', label: '🔮 OZ' }
+          { id: 'front', label: 'FRONT PAGE' },
+          { id: 'watch', label: 'MY PLAYERS' },
+          { id: 'wax', label: 'WAX TRACKER' },
+          { id: 'oz', label: 'OZ PREDICTIONS' }
         ].map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             style={{
               flex: 1,
-              padding: '16px 8px',
+              padding: '18px 10px',
               background: tab === t.id ? G.gold : 'transparent',
-              color: tab === t.id ? '#001a0d' : G.muted,
+              color: tab === t.id ? G.bg : G.muted,
               border: 'none',
               fontWeight: '700',
-              fontSize: '13px',
+              fontSize: '14px',
               cursor: 'pointer',
+              whiteSpace: 'nowrap',
             }}
           >
             {t.label}
@@ -93,21 +88,40 @@ export default function ThePressBox() {
         ))}
       </div>
 
-      <div style={{ padding: '20px', maxWidth: '720px', margin: '0 auto' }}>
+      <div style={{ padding: '20px', maxWidth: '750px', margin: '0 auto' }}>
         {tab === 'front' && (
           <>
             <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px', marginBottom: '20px' }}>
-              <h2 style={{ color: G.gold }}>🔴 Live MLB Scores</h2>
-              {loadingScores && <p>Loading live games...</p>}
-              {liveGames.length > 0 ? (
-                liveGames.map((g, i) => (
-                  <div key={i} style={{ padding: '12px 0', borderBottom: `1px solid ${G.border}` }}>
-                    <strong>{g.teams?.away?.team?.name} @ {g.teams?.home?.team?.name}</strong>
-                    <div style={{ color: G.muted }}>{g.status?.detailedState || 'Scheduled'}</div>
-                  </div>
-                ))
-              ) : <p>No games today or loading...</p>}
+              <h2 style={{ color: G.gold }}>🔴 LIVE SCORES</h2>
+              {loading && <p>Loading today's games...</p>}
+              {liveGames.map((g, i) => (
+                <div key={i} style={{ padding: '10px 0', borderBottom: `1px solid ${G.border}` }}>
+                  <strong>{g.teams?.away?.team?.name} @ {g.teams?.home?.team?.name}</strong>
+                  <div style={{ color: G.muted }}>{g.status?.detailedState}</div>
+                </div>
+              ))}
             </div>
 
             <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px' }}>
-              <h2 style={{ color: G.gold }}>📰 Live Headlines (Claude)</h2
+              <h2 style={{ color: G.gold }}>📰 LIVE HEADLINES</h2>
+              {headlines.map((h, i) => (
+                <div key={i} style={{ marginBottom: '18px' }}>
+                  <div style={{ color: G.gold, fontWeight: '700' }}>{h.headline}</div>
+                  <p style={{ color: G.muted, marginTop: '4px' }}>{h.summary}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {tab === 'watch' && (
+          <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
+            <h2 style={{ color: G.gold }}>👀 MY PLAYERS — CARD WATCHLIST</h2>
+            <p style={{ color: G.muted }}>Dynamic player cards and real-time values will load here.</p>
+          </div>
+        )}
+
+        {tab === 'wax' && (
+          <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
+            <h2 style={{ color: G.gold }}>📦 WAX TRACKER</h2>
+            <p>Live
