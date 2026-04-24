@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const G = {
   bg: "#001a0d", bg2: "#002814", bg3: "#003318",
@@ -10,30 +10,57 @@ const G = {
   up: "#00e676", down: "#ff4444",
 };
 
-const ALL_PLAYERS = [
-  { name: "Shohei Ohtani", team: "LA Dodgers", sport: "MLB", rankCurrent: 1, cardCurrent: 2100, cardPctChange: 7.7, trend: "⚡ OB streak snapped" },
-  { name: "Aaron Judge", team: "NY Yankees", sport: "MLB", rankCurrent: 2, cardCurrent: 965, cardPctChange: 10.3, trend: "📈 Heating up" },
-  { name: "Mike Trout", team: "LA Angels", sport: "MLB", rankCurrent: 9, cardCurrent: 620, cardPctChange: 63.2, trend: "🔥 Vintage Trout" },
-  { name: "VJ Edgecombe", team: "Philadelphia 76ers", sport: "NBA", rankCurrent: 18, cardCurrent: 175, cardPctChange: 169.2, trend: "🔥🔥 Playoff breakout" },
-  { name: "Dalton Rushing", team: "LA Dodgers", sport: "MLB", rankCurrent: 35, cardCurrent: 88, cardPctChange: 193.3, trend: "🚀 Breakout season" },
-];
-
 export default function ThePressBox() {
   const [tab, setTab] = useState<'front' | 'watch' | 'wax' | 'oz'>('front');
-  const [subTab, setSubTab] = useState('all');
+  const [liveGames, setLiveGames] = useState<any[]>([]);
+  const [headlines, setHeadlines] = useState<any[]>([]);
+  const [loadingScores, setLoadingScores] = useState(false);
+  const [loadingNews, setLoadingNews] = useState(false);
+
+  // Fetch live MLB scores
+  const fetchLiveScores = async () => {
+    setLoadingScores(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
+      const data = await res.json();
+      const games = data.dates?.[0]?.games || [];
+      setLiveGames(games);
+    } catch (e) {
+      console.error(e);
+      setLiveGames([]);
+    }
+    setLoadingScores(false);
+  };
+
+  // Simple news fallback (you can replace with real news API later)
+  const fetchHeadlines = async () => {
+    setLoadingNews(true);
+    setHeadlines([
+      { headline: "Live sports data loading...", summary: "MLB, NBA, and card market updates in real time" },
+    ]);
+    setLoadingNews(false);
+  };
+
+  useEffect(() => {
+    if (tab === 'front') {
+      fetchLiveScores();
+      fetchHeadlines();
+    }
+  }, [tab]);
 
   return (
     <div style={{ minHeight: '100vh', background: G.bg, color: G.text, fontFamily: 'Arial, sans-serif' }}>
       {/* Masthead */}
       <div style={{ background: G.green, padding: '20px 10px', textAlign: 'center', borderBottom: `4px solid ${G.gold}` }}>
-        <div style={{ color: G.gold, fontSize: '12px', letterSpacing: '6px' }}>⬥ DAILY SPORTS EDITION ⬥</div>
+        <div style={{ color: G.gold, fontSize: '12px', letterSpacing: '6px' }}>⬥ REAL-TIME SPORTS EDITION ⬥</div>
         <h1 style={{ fontSize: '42px', fontWeight: '900', margin: '8px 0', color: 'white', letterSpacing: '3px' }}>
           THE PRESS BOX
         </h1>
-        <div style={{ color: G.gold, fontSize: '16px' }}>April 23, 2026 • Fenway Edition</div>
+        <div style={{ color: G.gold, fontSize: '16px' }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
       </div>
 
-      {/* Main Navigation */}
+      {/* Navigation */}
       <div style={{ display: 'flex', background: G.bg2, overflowX: 'auto', borderBottom: `2px solid ${G.green}` }}>
         {[
           { id: 'front', label: '🏠 FRONT PAGE' },
@@ -61,85 +88,50 @@ export default function ThePressBox() {
       </div>
 
       <div style={{ padding: '20px', maxWidth: '720px', margin: '0 auto' }}>
-        {/* FRONT PAGE */}
         {tab === 'front' && (
           <>
             <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px', marginBottom: '20px' }}>
-              <h2 style={{ color: G.gold }}>🔥 Breaking News</h2>
-              <p><strong>VJ Edgecombe</strong> drops 30 in Playoffs G2 • Series tied 1-1</p>
-              <p><strong>Dalton Rushing</strong> .476 AVG — Dodgers roster dilemma</p>
-              <p><strong>Jose Soriano</strong> historic 0.28 ERA start</p>
+              <h2 style={{ color: G.gold }}>🔴 Live MLB Scores</h2>
+              {loadingScores && <p>Loading live games...</p>}
+              {liveGames.length > 0 ? (
+                liveGames.map((g, i) => (
+                  <div key={i} style={{ padding: '12px 0', borderBottom: `1px solid ${G.border}` }}>
+                    {g.teams?.away?.team?.name} @ {g.teams?.home?.team?.name} — {g.status?.detailedState || 'Scheduled'}
+                  </div>
+                ))
+              ) : <p>No games today or API issue.</p>}
             </div>
 
-            <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px', marginBottom: '20px' }}>
-              <h3 style={{ color: G.gold }}>Today's Games</h3>
-              <p>BOS @ NYY • 6:45 PM</p>
-              <p>OKC vs PHX • 9:30 PM (Playoffs G2)</p>
+            <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px' }}>
+              <h2 style={{ color: G.gold }}>📰 Top Headlines</h2>
+              {headlines.map((h, i) => (
+                <div key={i} style={{ marginBottom: '15px' }}>
+                  <strong>{h.headline}</strong>
+                  <p style={{ color: G.muted, marginTop: '5px' }}>{h.summary}</p>
+                </div>
+              ))}
             </div>
           </>
         )}
 
-        {/* MY PLAYERS */}
         {tab === 'watch' && (
-          <div>
-            <h2 style={{ color: G.gold, marginBottom: '15px' }}>My Players — Card Watchlist</h2>
-            
-            {ALL_PLAYERS.map((p, i) => (
-              <div key={i} style={{ 
-                background: G.bg2, 
-                padding: '18px', 
-                marginBottom: '12px', 
-                borderRadius: '10px',
-                border: `1px solid ${G.border}` 
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{p.name}</div>
-                    <div style={{ color: G.muted }}>{p.team} • {p.sport}</div>
-                    <div style={{ color: G.up, fontSize: '14px', marginTop: '4px' }}>{p.trend}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: G.gold, fontSize: '24px', fontWeight: '700' }}>${p.cardCurrent}</div>
-                    <div style={{ color: G.up, fontWeight: '700' }}>+{p.cardPctChange}%</div>
-                    <div style={{ color: G.muted, fontSize: '12px' }}>#{p.rankCurrent}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
+            <h2 style={{ color: G.gold }}>👀 My Players</h2>
+            <p>Dynamic player tracking with live card values coming soon (via external APIs).</p>
           </div>
         )}
 
-        {/* WAX TRACKER */}
         {tab === 'wax' && (
           <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
-            <h2 style={{ color: G.gold }}>📦 Wax Tracker — Upcoming Releases</h2>
-            
-            <div style={{ margin: '20px 0', padding: '15px', background: G.bg3, borderRadius: '8px' }}>
-              <strong>2026 Bowman Baseball</strong><br />
-              May 13 • Pre-order live • Ethan Holliday 1st Bowman 🔥
-            </div>
-
-            <div style={{ margin: '20px 0', padding: '15px', background: G.bg3, borderRadius: '8px' }}>
-              <strong>2026 Topps Chrome Baseball</strong><br />
-              August • Most anticipated Chrome class in years
-            </div>
+            <h2 style={{ color: G.gold }}>📦 Live Wax Market</h2>
+            <p>Real-time release tracking and secondary market data coming in next update.</p>
           </div>
         )}
 
-        {/* OZ PREDICTIONS */}
         {tab === 'oz' && (
           <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
-            <h2 style={{ color: G.gold }}>🔮 Oz Daily Picks</h2>
-            
-            <div style={{ marginTop: '20px' }}>
-              <strong>STRONG BUY</strong><br />
-              Ethan Holliday 1st Bowman Chrome Auto — Target $400–600
-            </div>
-            
-            <div style={{ marginTop: '20px' }}>
-              <strong>Today's Best Bet</strong><br />
-              Angels ML vs TOR (Jose Soriano pitching) — Great value
-            </div>
+            <h2 style={{ color: G.gold }}>🔮 Oz Live Predictions</h2>
+            <p>AI-powered picks and betting edges will pull fresh data here.</p>
           </div>
         )}
       </div>
