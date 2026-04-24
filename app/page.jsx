@@ -11,15 +11,14 @@ const G = {
 };
 
 export default function ThePressBox() {
-  const [tab, setTab] = useState<'front' | 'watch' | 'wax' | 'oz'>('front');
-  const [liveGames, setLiveGames] = useState<any[]>([]);
-  const [headlines, setHeadlines] = useState<any[]>([]);
+  const [tab, setTab] = useState('front');
+  const [liveGames, setLiveGames] = useState([]);
+  const [headlines, setHeadlines] = useState([]);
   const [loadingScores, setLoadingScores] = useState(false);
   const [loadingHeadlines, setLoadingHeadlines] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Real MLB Scores
   const fetchLiveScores = async () => {
     setLoadingScores(true);
     try {
@@ -34,7 +33,6 @@ export default function ThePressBox() {
     setLoadingScores(false);
   };
 
-  // Claude-powered Live Headlines
   const fetchHeadlines = async () => {
     setLoadingHeadlines(true);
     try {
@@ -43,7 +41,7 @@ export default function ThePressBox() {
       setHeadlines(data.headlines || []);
     } catch (e) {
       console.error(e);
-      setHeadlines([{ headline: "Claude headlines loading...", summary: "Real-time sports & card market news" }]);
+      setHeadlines([{ headline: "Live news loading...", summary: "Claude is generating fresh headlines" }]);
     }
     setLoadingHeadlines(false);
   };
@@ -78,7 +76,7 @@ export default function ThePressBox() {
         ].map(t => (
           <button
             key={t.id}
-            onClick={() => setTab(t.id as any)}
+            onClick={() => setTab(t.id)}
             style={{
               flex: 1,
               padding: '16px 8px',
@@ -98,36 +96,18 @@ export default function ThePressBox() {
       <div style={{ padding: '20px', maxWidth: '720px', margin: '0 auto' }}>
         {tab === 'front' && (
           <>
-            {/* LIVE SCORES */}
             <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px', marginBottom: '20px' }}>
               <h2 style={{ color: G.gold }}>🔴 Live MLB Scores</h2>
               {loadingScores && <p>Loading live games...</p>}
-              {liveGames.length > 0 ? liveGames.map((g, i) => (
-                <div key={i} style={{ padding: '12px 0', borderBottom: `1px solid ${G.border}` }}>
-                  <strong>{g.teams?.away?.team?.name} @ {g.teams?.home?.team?.name}</strong>
-                  <div style={{ color: G.muted }}>{g.status?.detailedState || 'Scheduled'}</div>
-                </div>
-              )) : <p>No games today.</p>}
+              {liveGames.length > 0 ? (
+                liveGames.map((g, i) => (
+                  <div key={i} style={{ padding: '12px 0', borderBottom: `1px solid ${G.border}` }}>
+                    <strong>{g.teams?.away?.team?.name} @ {g.teams?.home?.team?.name}</strong>
+                    <div style={{ color: G.muted }}>{g.status?.detailedState || 'Scheduled'}</div>
+                  </div>
+                ))
+              ) : <p>No games today or loading...</p>}
             </div>
 
-            {/* CLAUDE HEADLINES */}
             <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px' }}>
-              <h2 style={{ color: G.gold }}>📰 Live Headlines</h2>
-              {loadingHeadlines && <p>Generating fresh headlines with Claude...</p>}
-              {headlines.map((h, i) => (
-                <div key={i} style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${G.border}` }}>
-                  <strong style={{ color: G.gold }}>{h.headline}</strong>
-                  <p style={{ color: G.muted, marginTop: '6px' }}>{h.summary}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {tab === 'watch' && <div style={{ background: G.bg2, padding: '30px', borderRadius: '10px' }}><h2 style={{ color: G.gold }}>👀 My Players</h2><p>Real-time card values and stats coming next.</p></div>}
-        {tab === 'wax' && <div style={{ background: G.bg2, padding: '30px', borderRadius: '10px' }}><h2 style={{ color: G.gold }}>📦 Wax Market</h2><p>Live release tracking coming soon.</p></div>}
-        {tab === 'oz' && <div style={{ background: G.bg2, padding: '30px', borderRadius: '10px' }}><h2 style={{ color: G.gold }}>🔮 Oz Live Picks</h2><p>Dynamic AI predictions loading...</p></div>}
-      </div>
-    </div>
-  );
-}
+              <h2 style={{ color: G.gold }}>📰 Live Headlines (Claude)</h2
