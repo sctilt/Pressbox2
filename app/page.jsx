@@ -1,33 +1,117 @@
-import DashboardLayout from "./components/DashboardLayout";
-import LiveScores from "./components/LiveScores";
-import PlayerChart from "./components/PlayerChart";
-import StatCard from "./components/StatCard";
-import { sampleChart } from "./data/sampleChart";
+'use client';
 
-export default function Page() {
+import { useState } from 'react';
+
+const G = {
+  bg: "#001a0d", bg2: "#002814", bg3: "#003318",
+  border: "#004d24", border2: "#006a3d",
+  green: "#006a3d", gold: "#ffd100", white: "#ffffff",
+  text: "#e8f5ee", muted: "#7ab893", dim: "#1a4030",
+  up: "#00e676", down: "#ff4444",
+};
+
+const ALL_PLAYERS = [
+  { name: "Shohei Ohtani", team: "LA Dodgers", sport: "MLB", rankCurrent: 1, cardCurrent: 2100, cardPctChange: 7.7 },
+  { name: "Aaron Judge", team: "NY Yankees", sport: "MLB", rankCurrent: 2, cardCurrent: 965, cardPctChange: 10.3 },
+  { name: "Mike Trout", team: "LA Angels", sport: "MLB", rankCurrent: 9, cardCurrent: 620, cardPctChange: 63.2 },
+  { name: "VJ Edgecombe", team: "Philadelphia 76ers", sport: "NBA", rankCurrent: 18, cardCurrent: 175, cardPctChange: 169.2 },
+  { name: "Dalton Rushing", team: "LA Dodgers", sport: "MLB", rankCurrent: 35, cardCurrent: 88, cardPctChange: 193.3 },
+];
+
+export default function ThePressBox() {
+  const [tab, setTab] = useState<'front' | 'watch' | 'wax' | 'oz'>('front');
+
   return (
-    <DashboardLayout>
-
-      {/* Top stats row */}
-      <div style={{
-        display: "flex",
-        gap: 12,
-        marginBottom: 30
-      }}>
-        <StatCard label="Total Games" value="12" />
-        <StatCard label="Live Games" value="5" />
-        <StatCard label="Top Player" value="Ohtani" />
+    <div style={{ minHeight: '100vh', background: G.bg, color: G.text, fontFamily: 'Arial, sans-serif' }}>
+      {/* Masthead */}
+      <div style={{ background: G.green, padding: '20px 10px', textAlign: 'center', borderBottom: `4px solid ${G.gold}` }}>
+        <div style={{ color: G.gold, fontSize: '12px', letterSpacing: '6px' }}>⬥ DAILY SPORTS EDITION ⬥</div>
+        <h1 style={{ fontSize: '42px', fontWeight: '900', margin: '8px 0', color: 'white', letterSpacing: '3px' }}>
+          THE PRESS BOX
+        </h1>
+        <div style={{ color: G.gold, fontSize: '16px' }}>April 23, 2026</div>
       </div>
 
-      {/* Scores */}
-      <LiveScores />
-
-      {/* Chart */}
-      <div style={{ marginTop: 40 }}>
-        <h2>Player Trend</h2>
-        <PlayerChart data={sampleChart} />
+      {/* Navigation */}
+      <div style={{ display: 'flex', background: G.bg2, overflowX: 'auto', borderBottom: `2px solid ${G.green}` }}>
+        {[
+          { id: 'front', label: 'FRONT PAGE' },
+          { id: 'watch', label: 'MY PLAYERS' },
+          { id: 'wax', label: 'WAX 📦' },
+          { id: 'oz', label: '🔮 OZ' }
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id as any)}
+            style={{
+              flex: 1,
+              padding: '16px 8px',
+              background: tab === t.id ? G.gold : 'transparent',
+              color: tab === t.id ? '#001a0d' : G.muted,
+              border: 'none',
+              fontWeight: '700',
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-    </DashboardLayout>
+      <div style={{ padding: '20px', maxWidth: '720px', margin: '0 auto' }}>
+        {tab === 'front' && (
+          <div>
+            <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px', marginBottom: '20px' }}>
+              <h2 style={{ color: G.gold }}>Breaking News</h2>
+              <p>VJ Edgecombe drops 30 in Playoffs G2 • Dalton Rushing heating up • 2026 Bowman Pre-orders live</p>
+            </div>
+            <div style={{ background: G.bg2, padding: '20px', borderRadius: '10px' }}>
+              <h3 style={{ color: G.gold }}>Live Scores • Today</h3>
+              <p>BOS @ NYY • 6:45 PM • Many more games</p>
+            </div>
+          </div>
+        )}
+
+        {tab === 'watch' && (
+          <div>
+            <h2 style={{ color: G.gold, marginBottom: '20px' }}>My Players — Card Watchlist</h2>
+            {ALL_PLAYERS.map((p, i) => (
+              <div key={i} style={{ 
+                background: G.bg2, padding: '18px', marginBottom: '12px', 
+                borderRadius: '8px', border: `1px solid ${G.border}` 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{p.name}</div>
+                    <div style={{ color: G.muted }}>{p.team} • {p.sport}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: G.gold, fontSize: '22px', fontWeight: '700' }}>${p.cardCurrent}</div>
+                    <div style={{ color: G.up, fontWeight: '700' }}>+{p.cardPctChange}%</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === 'wax' && (
+          <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
+            <h2 style={{ color: G.gold }}>Wax Tracker</h2>
+            <p><strong>2026 Bowman Baseball</strong> — Pre-order live • May 13 release</p>
+            <p><strong>2026 Topps Chrome</strong> — Most anticipated release of the year</p>
+          </div>
+        )}
+
+        {tab === 'oz' && (
+          <div style={{ background: G.bg2, padding: '25px', borderRadius: '10px' }}>
+            <h2 style={{ color: G.gold }}>🔮 Oz Predictions</h2>
+            <p>Strong Buy: Ethan Holliday 1st Bowman Chrome Auto</p>
+            <p>Today's Best Bet: Angels ML vs TOR (Jose Soriano pitching)</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
