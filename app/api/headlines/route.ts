@@ -1,4 +1,3 @@
-// app/api/headlines/route.ts
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -7,7 +6,7 @@ export async function GET() {
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' 
     });
 
-    const prompt = `You are a sports news editor. Today is ${today}. Return ONLY a valid JSON array of 4-5 news items about MLB, NBA playoffs, sports cards. Format: [{"headline": "...", "summary": "..."}]`;
+    const prompt = `Today is ${today}. Return ONLY valid JSON array of 4 news items about current MLB, NBA playoffs, or sports cards. Format: [{"headline": "...", "summary": "..."}]`;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -18,25 +17,24 @@ export async function GET() {
       },
       body: JSON.stringify({
         model: "claude-3-5-sonnet-20240620",
-        max_tokens: 1000,
+        max_tokens: 800,
         messages: [{ role: "user", content: prompt }]
       })
     });
 
     const data = await res.json();
     const text = data.content?.[0]?.text || '[]';
-    
-    let headlines;
+    let headlines = [];
     try {
       headlines = JSON.parse(text);
     } catch {
-      headlines = [{ headline: "Sports news updating...", summary: "Claude is generating fresh headlines" }];
+      headlines = [{ headline: "Sports news updating", summary: "Claude is working..." }];
     }
 
     return NextResponse.json({ headlines });
   } catch (error) {
     return NextResponse.json({ 
-      headlines: [{ headline: "Live news unavailable", summary: "Check back soon" }] 
+      headlines: [{ headline: "Live news service", summary: "Check back in a moment" }] 
     });
   }
 }
